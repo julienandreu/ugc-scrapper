@@ -1,8 +1,10 @@
 #!/usr/bin/env node
+import 'dotenv/config';
 import { Command } from 'commander';
+import { scrap } from './scrapper';
 
 export type CLIOptions = {
-  name: string;
+  nameId: string;
 };
 
 const program = new Command();
@@ -10,9 +12,9 @@ const program = new Command();
 program
   .version('0.1.0')
   .description('Scrap User Generated Content')
-  .requiredOption('-n, --name <name>', 'Name of the project')
+  .requiredOption('-n, --name-id <nameId>', 'Name of the project')
   .parse();
 
 const options = program.opts<CLIOptions>();
 
-console.log(`Scrapping UGC for ${options.name}`);
+scrap(options.nameId);

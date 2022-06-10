@@ -42,3 +42,6 @@ dist/**/*
 !.yarn/versions
 .pnp.*
 yarn.lock
+
+# Generated
+generated
