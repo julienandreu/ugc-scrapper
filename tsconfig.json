@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "downlevelIteration": true,
+    "outDir": "dist"
+  },
+  "files": ["src/cli.ts"]
+}
