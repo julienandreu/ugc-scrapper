@@ -1,7 +1,5 @@
 import axios, { AxiosRequestHeaders } from 'axios';
 import { anonymousSignUp } from './uas';
-import { createReadStream } from 'fs';
-import FormData from 'form-data';
 
 const baseUrl = process.env.UGC_BASE_URL ?? 'https://ugc-stg.services.api.unity.com';
 
@@ -58,14 +56,14 @@ export async function createContent(
   }
 }
 
-export async function uploadFile(url: string, headers: AxiosRequestHeaders, filePath: string): Promise<any | null> {
+export async function uploadFile(
+  url: string,
+  headers: AxiosRequestHeaders,
+  fileContent: Buffer | string,
+): Promise<any | null> {
   try {
-    const form = new FormData();
-    form.append('file', createReadStream(filePath));
-
-    return axios.put(url, form, {
+    return axios.put(url, fileContent, {
       headers: {
-        ...form.getHeaders(),
         ...headers,
       },
     });

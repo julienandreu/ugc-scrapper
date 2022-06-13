@@ -1,5 +1,5 @@
-import { mkdirSync } from 'fs';
-import { fromFile } from 'hasha';
+import { createHash } from 'crypto';
+import { mkdirSync, readFileSync } from 'fs';
 import { getGameFromNameId, getModsFromGameId } from './modio';
 import { createContent, uploadFile } from './ugc';
 import { downloadFile } from './utils';
@@ -30,8 +30,7 @@ export async function scrap(nameId: string, projectId: string, environmentId: st
   console.log(`Game "${name}" icon downloaded!`);
 
   // Retrieve Mods
-  const allMods = await getModsFromGameId(id);
-  const mods = allMods.slice(0, 1); // FIXME: Remove this line, test purpose only
+  const mods = await getModsFromGameId(id);
   console.log(`${mods.length} mod(s) retrieved for game ${name}`);
 
   // Create mods directory
@@ -62,9 +61,13 @@ export async function scrap(nameId: string, projectId: string, environmentId: st
       await downloadModPromise;
       console.log(`Mod downloaded for mod "${mod.name_id}"`);
 
-      // Calculate md5 files hash
-      const logoMd5Hash = await fromFile(logoFilename, { algorithm: 'md5' });
-      const modMd5Hash = await fromFile(modFilename, { algorithm: 'md5' });
+      // File content
+      const logoContent = readFileSync(logoFilename);
+      const modContent = readFileSync(modFilename);
+
+      // Calculate base64 digest md5 files hash
+      const base64LogoMd5Hash = createHash('md5').update(logoContent).digest('base64');
+      const base64ModMd5Hash = createHash('md5').update(modContent).digest('base64');
 
       // Create UGC content
       console.log(`Creating UGC content...`);
@@ -73,8 +76,8 @@ export async function scrap(nameId: string, projectId: string, environmentId: st
         environmentId,
         mod.name,
         mod.description_plaintext,
-        modMd5Hash,
-        logoMd5Hash,
+        base64ModMd5Hash,
+        base64LogoMd5Hash,
       );
       if (!createContentResponse) {
         throw new Error(`Failed to create content for mod ${mod.name}`);
@@ -92,10 +95,10 @@ export async function scrap(nameId: string, projectId: string, environmentId: st
 
       // Upload both thumbnail and content
       console.log(`Uploading thumbnail for mod "${mod.name_id}"...`);
-      const uploadThumbnailPromise = uploadFile(uploadThumbnailUrl, uploadThumbnailHeaders, logoFilename);
+      const uploadThumbnailPromise = uploadFile(uploadThumbnailUrl, uploadThumbnailHeaders, logoContent);
 
       console.log(`Uploading content for mod "${mod.name_id}"...`);
-      const uploadContentPromise = uploadFile(uploadContentUrl, uploadContentHeaders, modFilename);
+      const uploadContentPromise = uploadFile(uploadContentUrl, uploadContentHeaders, modContent);
 
       // Wait for both upload promises
       await uploadThumbnailPromise;
@@ -105,7 +108,7 @@ export async function scrap(nameId: string, projectId: string, environmentId: st
 
       return id;
     } catch (error) {
-      //console.dir({ error }, { depth: null }); // FIXME: Cover error management
+      console.dir({ error }, { depth: null }); // FIXME: Cover error management
       return null;
     }
   });
