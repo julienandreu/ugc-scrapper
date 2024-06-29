@@ -1,3 +1,4 @@
+import { ProvidedContent, Provider } from './provider.interface';
 import axios from 'axios';
 
 const baseUrl = 'https://api.mod.io/v1';
@@ -94,7 +95,7 @@ export async function getGameFromNameId(nameId: string): Promise<Game | null> {
   }
 }
 
-export async function getModsFromGameId(gameId: number): Promise<Mod[]> {
+async function getModsFromGameId(gameId: number): Promise<Mod[]> {
   try {
     const url = `${baseUrl}/games/${gameId}/mods`;
     const params = {
@@ -114,3 +115,26 @@ export async function getModsFromGameId(gameId: number): Promise<Mod[]> {
     return [];
   }
 }
+
+function modToProvidedContentMapper(mod: Mod): ProvidedContent {
+  return {
+    name: mod.name,
+    description: mod.description_plaintext.substring(0, 1024) ?? mod.name,
+    contentUrl: mod.modfile.download.binary_url,
+    thumbnailUrl: mod.logo.thumb_320x180,
+  };
+}
+
+async function getContentFromGameName(name: string): Promise<ProvidedContent[]> {
+  const game = await getGameFromNameId(name);
+  if (!game) {
+    throw new Error('Game not found');
+  }
+  const mods = await getModsFromGameId(game.id);
+
+  return mods.map(modToProvidedContentMapper);
+}
+
+export const ModioProvider: Provider = {
+  getContentFromGameName,
+};

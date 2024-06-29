@@ -3,8 +3,10 @@ import 'dotenv/config';
 import { Command } from 'commander';
 import { scrap } from './scrapper';
 import { AxiosError } from 'axios';
+import { AvailableProvider, availableProviders } from './providers';
 
 export type CLIOptions = {
+  provider: AvailableProvider;
   nameId: string;
   projectId: string;
   environmentId: string;
@@ -41,11 +43,12 @@ const program = new Command();
 program
   .version('0.1.0')
   .description('Scrap User Generated Content')
+  .requiredOption('-p, --provider <provider>', `Provider: ${availableProviders.join('|')}`)
   .requiredOption('-n, --name-id <nameId>', 'Name of the project')
-  .requiredOption('-p, --project-id <projectId>', 'Project ID')
+  .requiredOption('-i, --project-id <projectId>', 'Project ID')
   .requiredOption('-e, --environment-id <environmentId>', 'Environment ID')
   .parse();
 
 const options = program.opts<CLIOptions>();
 
-scrap(options.nameId, options.projectId, options.environmentId);
+scrap(options.provider)(options.nameId)(options.projectId)(options.environmentId);
